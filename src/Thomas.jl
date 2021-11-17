@@ -1,5 +1,11 @@
 module Thomas
 
-# Write your package code here.
+using LinearAlgebra
+
+import Base: *
+
+export dirichletlaplacian
+
+include("cartesian.jl")
 
 end

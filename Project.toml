@@ -3,6 +3,9 @@ uuid = "e340eb63-7005-45f1-b263-fba3e88328fa"
 authors = ["Vincent Le Chenadec <vincentlechenadec@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
 [compat]
 julia = "1"
 
