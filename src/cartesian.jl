@@ -17,18 +17,12 @@ struct CartesianDecomposition{N,T,R<:NTuple{N,AbstractUnitRange{T}}} <: Abstract
     nproc::NTuple{N,T}
 end
 
-getindices(p::CartesianDecomposition) = p.indices
-getnover(p::CartesianDecomposition) = p.nover
-getnproc(p::CartesianDecomposition) = p.nproc
-
-size(p::CartesianDecomposition) = getnproc(p)
+size(p::CartesianDecomposition) = p.nproc
 
 getindex(part::CartesianDecomposition, index::CartesianIndex) =
     getindex(part, Tuple(index)...) 
 function getindex(part::CartesianDecomposition, index...)
-    indices = getindices(part)
-    nover = getnover(part)
-    nproc = getnproc(part)
+    (; indices, nover, nproc) = part
 
     ls = first.(indices)
     hs = last.(indices)
@@ -42,5 +36,4 @@ function getindex(part::CartesianDecomposition, index...)
          )
     end
 end
-
 

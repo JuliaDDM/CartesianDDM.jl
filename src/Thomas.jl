@@ -2,9 +2,12 @@ module Thomas
 
 using SparseArrays
 
-export laplacian
+import Base: size, getindex
+
+export laplacian, CartesianDecomposition
 
 include("boundarycondition.jl")
 include("laplacian.jl")
+include("cartesian.jl")
 
 end
