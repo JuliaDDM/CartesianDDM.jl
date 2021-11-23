@@ -1,63 +1,46 @@
 """
-    CartesianStarMatrix{S,N,T,AA} <: AbstractMatrix{T}
+    CartesianDecomposition(indices, nover, nproc)
+
+# Examples
+
+```julia-repl
+julia> CartesianDecomposition((2:4, 3:8), (2, 1), (2, 3))
+2×3 CartesianDecomposition{2, Int64, Tuple{UnitRange{Int64}, UnitRange{Int64}}}:
+ (2:3, 3:5)  (2:3, 5:7)  (2:3, 7:8)
+ (2:4, 3:5)  (2:4, 5:7)  (2:4, 7:8)
+```
 
 """
-struct CartesianStarMatrix{S,N,T,AA<:NTuple{S,NTuple{N,AbstractArray{T,N}}}} <: AbstractMatrix{T}
-    diags::AA
+struct CartesianDecomposition{N,T,R<:NTuple{N,AbstractUnitRange{T}}} <: AbstractArray{R,N}
+    indices::R
+    nover::NTuple{N,T}
+    nproc::NTuple{N,T}
 end
 
-Base.size(A::CartesianStarMatrix) = ntuple(i -> prod(size(first(first(diagonals(A))))), 2)
+getindices(p::CartesianDecomposition) = p.indices
+getnover(p::CartesianDecomposition) = p.nover
+getnproc(p::CartesianDecomposition) = p.nproc
 
-function Base.getindex(A::CartesianStarMatrix, i, j)
-    indices = CartesianIndices(first(first(diagonals(A))))
+size(p::CartesianDecomposition) = getnproc(p)
 
-    I, J = indices[i].I, indices[j].I
+getindex(part::CartesianDecomposition, index::CartesianIndex) =
+    getindex(part, Tuple(index)...) 
+function getindex(part::CartesianDecomposition, index...)
+    indices = getindices(part)
+    nover = getnover(part)
+    nproc = getnproc(part)
 
-    sum(abs.(I .- J)) > 1 ? zero(eltype(A)) : one(eltype(A))
-end
+    ls = first.(indices)
+    hs = last.(indices)
+    Ts = typeof.(indices)
 
-diagonals(A::CartesianStarMatrix) = A.diags
-
-"""
-    dirichletlaplacian(n...)
-
-Second order laplacian with Dirichlet boundary conditions.
-
-"""
-function dirichletlaplacian(n...)
-
-    coefs = (-1.0, 2.0, -1.0)
-
-    diags = map(coefs) do c
-        ntuple(length(n)) do i
-            c * ones(n)
-        end
+    map(Ts, ls, hs, nover, nproc, index) do T, l, h, o, p, i
+        d = h - l + 1
+        T(
+          max(d * (i - 1) ÷ p + l - o ÷ 2, l),
+          min(d * i ÷ p - 1 + l + (o +      1) ÷ 2, h)
+         )
     end
-
-    CartesianStarMatrix(diags)
 end
 
-"""
-    tridiagonal(A)
-
-Convert a `CartesianStarMatrix{3,1}` matrix into a `LinearAlgebra.Tridiagonal` matrix.
-
-"""
-function tridiagonal(A::CartesianStarMatrix{3,1})
-    ((α,), (β,), (γ,)) = diagonals(A)
-
-    a = @view α[begin + 1:end]
-    b = @view β[begin:end]
-    c = @view γ[begin:end - 1]
-
-    Tridiagonal(a, b, c)
-end
-
-*(A::CartesianStarMatrix{3,1}, x::AbstractVector) = tridiagonal(A) * x
-
-#=
-A = dirichletlaplacian(3, 4);
-b = rand(12);
-A * b
-=#
 
