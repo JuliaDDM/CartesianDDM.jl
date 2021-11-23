@@ -1,11 +1,10 @@
 module Thomas
 
-using LinearAlgebra
+using SparseArrays
 
-import Base: *
+export laplacian
 
-export dirichletlaplacian
-
-include("cartesian.jl")
+include("boundarycondition.jl")
+include("laplacian.jl")
 
 end
