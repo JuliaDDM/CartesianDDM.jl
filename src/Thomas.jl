@@ -1,8 +1,9 @@
 module Thomas
 
-using SparseArrays
 using Base.Cartesian
 using Base.Iterators
+using SparseArrays
+using OffsetArrays
 
 import Base: size, getindex, zeros
 

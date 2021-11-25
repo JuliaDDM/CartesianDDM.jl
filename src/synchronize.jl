@@ -76,9 +76,9 @@ function _synchronize!((out, dec)::T,
                        (in, part)::T) where {T<:NTuple{2,ArrayAbstract{1}}}
     for i in drop(axes(out, 1), 1)
         _synchronize!((out[i-1], dec[i-1]),
-                      (in[i], part[i]), 1)
+                      (in[i], part[i]))
         _synchronize!((out[i], dec[i]),
-                      (in[i-1], part[i-1]), 1)
+                      (in[i-1], part[i-1]))
     end
 end
 
@@ -91,13 +91,13 @@ function _synchronize!((out, dec)::T,
     for j in drop(axes(out, 2), 1)
         for i in drop(axes(out, 1), 1)
             _synchronize!((out[i-1, j-1], dec[i-1, j-1]),
-                          (in[i, j], part[i, j]), 2)
+                          (in[i, j], part[i, j]))
             _synchronize!((out[i, j], dec[i, j]),
-                          (in[i-1, j-1], part[i-1, j-1]), 2)
+                          (in[i-1, j-1], part[i-1, j-1]))
             _synchronize!((out[i, j-1], dec[i, j-1]),
-                          (in[i-1, j], part[i-1, j]), 2)
+                          (in[i-1, j], part[i-1, j]))
             _synchronize!((out[i-1, j], dec[i-1, j]),
-                          (in[i, j-1], part[i, j-1]), 2)
+                          (in[i, j-1], part[i, j-1]))
         end
     end
 end
@@ -112,21 +112,21 @@ function _synchronize!((out, dec)::T,
         for j in drop(axes(out, 2), 1)
             for i in drop(axes(out, 1), 1)
                 _synchronize!((out[i-1, j-1, k-1], dec[i-1, j-1, k-1]),
-                              (in[i, j, k], part[i, j, k]), 3)
+                              (in[i, j, k], part[i, j, k]))
                 _synchronize!((out[i, j, k], dec[i, j, k]),
-                              (in[i-1, j-1, k-1], part[i-1, j-1, k-1]), 3)
+                              (in[i-1, j-1, k-1], part[i-1, j-1, k-1]))
                 _synchronize!((out[i, j, k-1], dec[i, j, k-1]),
-                              (in[i-1, j-1, k], part[i-1, j-1, k]), 3)
+                              (in[i-1, j-1, k], part[i-1, j-1, k]))
                 _synchronize!((out[i-1, j-1, k], dec[i-1, j-1, k]),
-                              (in[i, j, k-1], part[i, j, k-1]), 3)
+                              (in[i, j, k-1], part[i, j, k-1]))
                 _synchronize!((out[i-1, j, k-1], dec[i-1, j, k-1]),
-                              (in[i, j-1, k], part[i, j-1, k]), 3)
+                              (in[i, j-1, k], part[i, j-1, k]))
                 _synchronize!((out[i, j-1, k], dec[i, j-1, k]),
-                              (in[i-1, j, k-1], part[i-1, j, k-1]), 3)
+                              (in[i-1, j, k-1], part[i-1, j, k-1]))
                 _synchronize!((out[i, j-1, k-1], dec[i, j-1, k-1]),
-                              (in[i-1, j, k], part[i-1, j, k]), 3)
+                              (in[i-1, j, k], part[i-1, j, k]))
                 _synchronize!((out[i-1, j, k], dec[i-1, j, k]),
-                              (in[i, j-1, k-1], part[i, j-1, k-1]), 3)
+                              (in[i, j-1, k-1], part[i, j-1, k-1]))
             end
         end
     end
@@ -136,8 +136,12 @@ end
 Synchronize a local array from a global array
 
 """
-function _synchronize!((out, dec), (in, part), arg)
-    cnt[arg] += 1
-    println(cnt)
+function _synchronize!((out, dec), (in, part))
+    loc = reshape(out, dec...)
+    glob = reshape(in, part...)
+
+    iter = intersect(CartesianIndices.((dec, part))...)
+
+    loc[iter] .= glob[iter]
 end
 
