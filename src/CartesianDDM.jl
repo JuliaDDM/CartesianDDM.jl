@@ -1,4 +1,4 @@
-module Thomas
+module CartesianDDM
 
 using Base.Cartesian
 using Base.Iterators

@@ -1,4 +1,4 @@
-name = "Thomas"
+name = "CartesianDDM"
 uuid = "e340eb63-7005-45f1-b263-fba3e88328fa"
 authors = ["Vincent Le Chenadec <vincentlechenadec@gmail.com> and contributors"]
 version = "0.1.0"

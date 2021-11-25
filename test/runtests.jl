@@ -1,6 +1,6 @@
-using Thomas
+using CartesianDDM
 using Test
 
-@testset "Thomas.jl" begin
+@testset "CartesianDDM.jl" begin
     # Write your tests here.
 end

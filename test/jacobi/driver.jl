@@ -4,7 +4,7 @@ Assumes coefficients of PoU are either ``0`` or ``1``.
 """
 jacobi
 
-using Thomas
+using CartesianDDM
 
 indices = (1:4, 1:8, 1:6)
 nover = (1, 1, 1)
