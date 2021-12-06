@@ -32,8 +32,20 @@ function getindex(part::CartesianDecomposition, index...)
         d = h - l + 1
         T(
           max(d * (i - 1) ÷ p + l - o ÷ 2, l),
-          min(d * i ÷ p - 1 + l + (o +      1) ÷ 2, h)
+          min(d * i ÷ p - 1 + l + (o + 1) ÷ 2, h)
          )
     end
+end
+
+function partition(indices, nproc)
+    CartesianDecomposition(indices,
+                           ntuple(zero, length(indices)),
+                           nproc)
+end
+
+function decompose(indices, nover, nproc)
+    CartesianDecomposition(indices,
+                           nover,
+                           nproc)
 end
 
