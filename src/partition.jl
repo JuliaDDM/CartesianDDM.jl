@@ -1,11 +1,13 @@
-struct BooleanPartition{T,R} <: AbstractMatrix{T}
+"""
+    CartesianBooleanPartition
+
+Boolean partition of unity on a Cartesian domain.
+
+"""
+struct CartesianBooleanPartition{T,R} <: DDMMatrix{T}
     part::R
-    decomp::R
 end
 
-BooleanPartition{T}(part::R, decomp::R) where {T,R} =
-    BooleanPartition{T,R}(part, decomp)
-
-(*)(D::BooleanPartition, x::AbstractVector) = x
-# reshape(x, D.decomp)
+CartesianBooleanPartition{T}(part) where {T} =
+    CartesianBooleanPartition{T,typeof(part)}(part)
 

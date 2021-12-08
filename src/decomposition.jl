@@ -21,6 +21,7 @@ size(p::CartesianDecomposition) = p.nproc
 
 getindex(part::CartesianDecomposition, index::CartesianIndex) =
     getindex(part, Tuple(index)...) 
+
 function getindex(part::CartesianDecomposition, index...)
     (; indices, nover, nproc) = part
 

@@ -1,27 +1,20 @@
 module CartesianDDM
 
-using Base.Cartesian
 using Base.Iterators
 using SparseArrays
 using OffsetArrays
 
-import Base: zeros# delete
-import Base: size, getindex, *
-#import Base: parent
+import Base: size, getindex
 
-#export CartesianVector
-export BooleanPartition
-export laplacian, allocate, decompose, partition, synchronize!
+export decompose, partition
+export CartesianDDMVector
+export CartesianBooleanPartition
 
-const cnt = Vector{Int}(undef, 3)
-
-include("boundarycondition.jl")
-include("operators.jl")
-include("cartesian.jl")
+include("decomposition.jl")
 include("arrays.jl")
+include("vectors.jl")
+include("matrices.jl")
 include("partition.jl")
 include("synchronize.jl")
-
-__init__() = cnt .= 0
 
 end
