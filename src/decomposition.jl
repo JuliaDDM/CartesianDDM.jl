@@ -13,8 +13,8 @@ julia> CartesianDecomposition((2:4, 3:8), (2, 1), (2, 3))
 """
 struct CartesianDecomposition{N,T,R<:NTuple{N,AbstractUnitRange{T}}} <: AbstractArray{R,N}
     indices::R
-    nover::NTuple{N,T}
     nproc::NTuple{N,T}
+    nover::NTuple{N,T}
 end
 
 size(p::CartesianDecomposition) = p.nproc
@@ -38,15 +38,9 @@ function getindex(part::CartesianDecomposition, index...)
     end
 end
 
-function partition(indices, nproc)
-    CartesianDecomposition(indices,
-                           ntuple(zero, length(indices)),
-                           nproc)
-end
+decompose(indices, nproc) =
+    decompose(indices, nproc, ntuple(zero, length(indices)))
 
-function decompose(indices, nover, nproc)
-    CartesianDecomposition(indices,
-                           nover,
-                           nproc)
-end
+decompose(indices, nproc, nover) =
+    CartesianDecomposition(indices, nproc, nover)
 

@@ -5,7 +5,7 @@ using OffsetArrays
 
 import Base: size, getindex, setindex!
 
-export decompose, partition
+export decompose
 export CartesianDDMVector
 export CartesianBooleanPartition
 
