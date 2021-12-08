@@ -6,18 +6,38 @@ jacobi
 
 using CartesianDDM
 
-indices = (1:4, 1:8, 1:6)
+indices = (3:6, 2:9, 3:8)
 nover = (1, 1, 1)
 nproc = (3, 4, 5)
 
 decomp = decompose(indices, nover, nproc)
-Ui = CartesianDDMVector(zeros, decomp)
-
 part = partition(indices, nproc)
-Di = CartesianBooleanPartition{Float64}(part)
 
-nothing
-#Di .* Ui
+Ui = CartesianDDMVector{Float64}(undef, decomp, part)
+
+#=
+foo(ci::CartesianIndex) = prod(ci.I)
+
+for (ar, indices) in zip(Ui.parent, decomp)
+    cindices = CartesianIndices(indices)
+    ar .= reshape(foo.(cindices), :)
+end
+
+Vi = reshape(foo.(CartesianIndices(indices)), indices)
+
+for (ar, indices) in zip(Ui.parent, decomp)
+    a = reshape(ar, length.(indices))
+    b = Vi[CartesianIndices(indices)]
+end
+
+for (u, v) in zip(Ui, Vi)
+    !iszero(u - v) && @show u - v
+end
+=#
+
+#=
+Di = CartesianBooleanPartition{Float64}(part)
+=#
 
 #=
 glob =zeros(Float64, part)
