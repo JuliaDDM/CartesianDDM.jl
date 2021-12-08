@@ -87,6 +87,45 @@ function getindex(x::CartesianDDMVector, i)
     parent[index][j]
 end
 
+"""
+    setindex!(x::CartesianDDMVector, val, i)
+
+This is a very inefficient way to access data. It is included only
+for debugging purposes.
+
+"""
+function setindex!(x::CartesianDDMVector, val, i)
+    @boundscheck checkbounds(x, i)
+
+    (; pou, parent) = x
+
+    parts = map(pou) do D
+        getproperty(D, :part)
+    end
+
+    decomps = map(pou) do D
+        getproperty(D, :decomp)
+    end
+
+    indices = map(first(parts), last(parts)) do start, stop
+        first(start):last(stop)
+    end
+
+    ci = CartesianIndices(indices)[i]
+
+    index = findfirst(parts) do part
+        in(ci, CartesianIndices(part))
+    end
+
+    cj = findfirst(CartesianIndices(decomps[index])) do cj
+        ci == cj
+    end
+
+    j = LinearIndices(CartesianIndices(decomps[index]))[cj]
+
+    parent[index][j] = val
+end
+
 #=
 function CartesianDDMVector{T}(::UndefInitializer, decomp) where {T}
     parent = map(decomp) do indices

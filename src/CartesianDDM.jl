@@ -1,10 +1,9 @@
 module CartesianDDM
 
 using Base.Iterators
-using SparseArrays
 using OffsetArrays
 
-import Base: size, getindex
+import Base: size, getindex, setindex!
 
 export decompose, partition
 export CartesianDDMVector
