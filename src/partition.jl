@@ -3,6 +3,8 @@
 
 Boolean partition of unity on a Cartesian domain.
 
+1. Can `eltype` be `Bool`?
+
 """
 struct CartesianBooleanPartition{T,R} <: DDMMatrix{T}
     decomp::R
@@ -14,14 +16,40 @@ CartesianBooleanPartition{T}(decomp::R, part::R) where {T,R} =
 
 function size(D::CartesianBooleanPartition)
     (; decomp, part) = D
-    ntuple(i -> prod(length.(decomp)), 2)
+
+    n = mapreduce(+, decomp) do indices
+        prod(length.(indices))
+    end
+
+    ntuple(i -> n, 2)
 end
 
-function getindex(A::CartesianBooleanPartition{T}, i, j) where {T,P}
+function getindex(A::CartesianBooleanPartition{T}, i::Int, j::Int) where {T}
     @boundscheck checkbounds(A, i, j)
+
     (; decomp, part) = A
-    i ≠ j && return zero(T)
-    index = getindex(CartesianIndices(decomp), i)
-    in(index, CartesianIndices(part)) ? one(T) : zero(T)
+
+    i != j && return zero(T)
+
+    (; indices, nproc, nover) = decomp
+
+    subindices = OneTo.(nover .* (nproc .- 1) .+ length.(indices))
+
+    ci = CartesianIndices(subindices)[i]
+
+    @show ci
+
+#=
+    index = findfirst(decomp) do sub
+        in(ci, CartesianIndices(sub))
+    end
+
+    if in(ci, CartesianIndices(part[index]))
+        return one(T)
+    else
+        return zero(T)
+    end
+    =#
+    zero(T)
 end
 

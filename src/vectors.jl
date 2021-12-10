@@ -1,6 +1,67 @@
 const DDMVector{T} = DDMArray{T,1}
 
 """
+    WrappedDDMVector
+
+Wraps a DDMVector to make it behave like a global one.
+
+"""
+struct WrappedDDMVector{T,P,A} <: AbstractVector{T}
+    pou::P
+    parent::A
+end
+
+parent(v::WrappedDDMVector) = getproperty(v, :parent)
+
+function size(v::WrappedDDMVector)
+    (; pou, parent) = v
+    mapreduce(+, pou) do D
+        (; decomp, part) = D
+        prod(length.(part))
+    end |> tuple
+end
+
+"""
+    getindex(v::WrappedDDMVector, i)
+
+Assumes partition of unity is Boolean for now. This is a very inefficient
+way to access data. It is included only for debugging purposes.
+
+"""
+function getindex(v::WrappedDDMVector, i)
+    @boundscheck checkbounds(v, i)
+
+    (; pou, w) = v
+
+    parts = map(pou) do D
+        getproperty(D, :part)
+    end
+
+    decomps = map(pou) do D
+        getproperty(D, :decomp)
+    end
+
+    #getproperty(decomp, :indices)
+    indices = map(first(parts), last(parts)) do start, stop
+        first(start):last(stop)
+    end
+
+    ci = CartesianIndices(indices)[i]
+
+    index = findfirst(parts) do part
+        in(ci, CartesianIndices(part))
+    end
+
+    cj = findfirst(CartesianIndices(decomps[index])) do cj
+        ci == cj
+    end
+
+    j = LinearIndices(CartesianIndices(decomps[index]))[cj]
+
+    parent(w)[index][j]
+end
+
+"""
     CartesianDDMVector{T,D,P,A}
 
 # Note on `DenseArray`s
@@ -10,7 +71,7 @@ const DDMVector{T} = DDMArray{T,1}
 
 """
 struct CartesianDDMVector{T,P,A} <: DDMVector{T}
-    pou::P
+    pou::P # no need for this
     parent::A
 end
 
@@ -48,6 +109,7 @@ function size(x::CartesianDDMVector)
     end |> tuple
 end
 
+#=
 """
     getindex(x::CartesianDDMVector, i)
 
@@ -86,7 +148,9 @@ function getindex(x::CartesianDDMVector, i)
 
     parent[index][j]
 end
+=#
 
+#=
 """
     setindex!(x::CartesianDDMVector, val, i)
 
@@ -125,6 +189,7 @@ function setindex!(x::CartesianDDMVector, val, i)
 
     parent[index][j] = val
 end
+=#
 
 #=
 function CartesianDDMVector{T}(::UndefInitializer, decomp) where {T}
