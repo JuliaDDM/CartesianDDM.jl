@@ -1,211 +1,124 @@
 const DDMVector{T} = DDMArray{T,1}
 
 """
-    WrappedDDMVector
+    CartesianDDMVector{T,C,A}
 
-Wraps a DDMVector to make it behave like a global one.
+Objects of `CartesianDDMVector` behave like a normal array, except
+that the storage is not stored continuously but by DDM subdomain.
 
-"""
-struct WrappedDDMVector{T,P,A} <: AbstractVector{T}
-    pou::P
-    parent::A
-end
-
-parent(v::WrappedDDMVector) = getproperty(v, :parent)
-
-function size(v::WrappedDDMVector)
-    (; pou, parent) = v
-    mapreduce(+, pou) do D
-        (; decomp, part) = D
-        prod(length.(part))
-    end |> tuple
-end
-
-"""
-    getindex(v::WrappedDDMVector, i)
-
-Assumes partition of unity is Boolean for now. This is a very inefficient
-way to access data. It is included only for debugging purposes.
-
-"""
-function getindex(v::WrappedDDMVector, i)
-    @boundscheck checkbounds(v, i)
-
-    (; pou, w) = v
-
-    parts = map(pou) do D
-        getproperty(D, :part)
-    end
-
-    decomps = map(pou) do D
-        getproperty(D, :decomp)
-    end
-
-    #getproperty(decomp, :indices)
-    indices = map(first(parts), last(parts)) do start, stop
-        first(start):last(stop)
-    end
-
-    ci = CartesianIndices(indices)[i]
-
-    index = findfirst(parts) do part
-        in(ci, CartesianIndices(part))
-    end
-
-    cj = findfirst(CartesianIndices(decomps[index])) do cj
-        ci == cj
-    end
-
-    j = LinearIndices(CartesianIndices(decomps[index]))[cj]
-
-    parent(w)[index][j]
-end
-
-"""
-    CartesianDDMVector{T,D,P,A}
+For now, a Boolean partition of unity is assumed but this could be
+generalized at a later time.
 
 # Note on `DenseArray`s
 
-1. Would `CartesianDDMVector` qualify as a `DenseVector` if storage were contiguous?
+1. Would `CartesianDDMVector <: DenseVector` if contiguous storage?
 1. Optional field to signal/ensure coherence?
 
 """
-struct CartesianDDMVector{T,P,A} <: DDMVector{T}
-    pou::P # no need for this
+struct CartesianDDMVector{T,C,A} <: DDMVector{T}
+    context::C
     parent::A
 end
 
-function CartesianDDMVector{T}(::UndefInitializer, decomp, part) where {T}
-    parent = map(decomp) do indices
-        Vector{T}(undef, prod(length.(indices)))
-    end
-
-    pou = map(decomp, part) do indices...
-        CartesianBooleanPartition{T}(indices...)
-    end
-
-    CartesianDDMVector{T,typeof(pou),typeof(parent)}(pou, parent)
+function size(x::CartesianDDMVector)
+    (; context, parent) = x
+    (; dims) = context
+    (mapreduce(getdof, *, dims),)
 end
 
-function CartesianDDMVector(init::Function, decomp, part)
-    parent = map(decomp) do indices
-        init(prod(length.(indices)))
+"""
+    getindex(x::CartesianDDMVector, i)
+
+Assumes partition of unity is Boolean for now. This is a very
+inefficient way to read data. It is included only for debugging
+purposes.
+
+"""
+function getindex(x::CartesianDDMVector, i::Int)
+    @boundscheck checkbounds(x, i)
+
+    (; context, parent) = x
+
+    (; dims) = context
+    ci = getindex(CartesianIndices(getdof.(dims)), i)
+
+    nocontext = removeoverlap(context)
+    noglb, _ = ranges(nocontext)
+
+    index = findfirst(noglb) do el
+        in(ci, CartesianIndices(el))
+    end
+
+    glb, _, lcl = ranges(context)
+    domain = CartesianIndices(glb[index])
+
+    cj = findfirst(domain) do cj
+        cj == ci
+    end
+
+    j = LinearIndices(CartesianIndices(lcl[index]))[cj]
+
+    parent[index][j]
+end
+
+"""
+    setindex!(x::CartesianDDMVector, val, i::Int)
+
+Writes data in every subdomain that contains element i. This is
+a very inefficient way to write data. It is included only for
+debugging purposes.
+
+"""
+function setindex!(x::CartesianDDMVector, val, i::Int)
+    @boundscheck checkbounds(x, i)
+
+    (; context, parent) = x
+
+    (; dims) = context
+    ci = getindex(CartesianIndices(getdof.(dims)), i)
+
+    glb, _, lcl = ranges(context)
+
+    indices = findall(glb) do el
+        in(ci, CartesianIndices(el))
+    end
+
+    for index in indices
+        domain = CartesianIndices(glb[index])
+
+        cj = findfirst(domain) do cj
+            cj == ci
+        end
+
+        domain = CartesianIndices(lcl[index])
+
+        j = LinearIndices(domain)[cj]
+
+        parent[index][j] = val
+    end
+
+    val
+end
+
+function CartesianDDMVector{T}(::UndefInitializer, context) where {T}
+    _, lcl = ranges(context)
+
+    parent = map(lcl) do el
+        Array{T}(undef, length.(el))
+    end
+
+    CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
+end
+
+function CartesianDDMVector(init::Function, context)
+    _, lcl = ranges(context)
+
+    parent = map(lcl) do el
+        init(length.(el))
     end
 
     T = eltype(eltype(parent))
 
-    pou = map(decomp, part) do indices...
-        CartesianBooleanPartition{T}(indices...)
-    end
-
-    CartesianDDMVector{T,typeof(pou),typeof(parent)}(pou, parent)
+    CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
 end
-
-function size(x::CartesianDDMVector)
-    (; pou, parent) = x
-    mapreduce(+, pou) do D
-        (; decomp, part) = D
-        prod(length.(part))
-    end |> tuple
-end
-
-#=
-"""
-    getindex(x::CartesianDDMVector, i)
-
-Assumes partition of unity is Boolean for now. This is a very inefficient
-way to access data. It is included only for debugging purposes.
-
-"""
-function getindex(x::CartesianDDMVector, i)
-    @boundscheck checkbounds(x, i)
-
-    (; pou, parent) = x
-
-    parts = map(pou) do D
-        getproperty(D, :part)
-    end
-
-    decomps = map(pou) do D
-        getproperty(D, :decomp)
-    end
-
-    indices = map(first(parts), last(parts)) do start, stop
-        first(start):last(stop)
-    end
-
-    ci = CartesianIndices(indices)[i]
-
-    index = findfirst(parts) do part
-        in(ci, CartesianIndices(part))
-    end
-
-    cj = findfirst(CartesianIndices(decomps[index])) do cj
-        ci == cj
-    end
-
-    j = LinearIndices(CartesianIndices(decomps[index]))[cj]
-
-    parent[index][j]
-end
-=#
-
-#=
-"""
-    setindex!(x::CartesianDDMVector, val, i)
-
-This is a very inefficient way to access data. It is included only
-for debugging purposes.
-
-"""
-function setindex!(x::CartesianDDMVector, val, i)
-    @boundscheck checkbounds(x, i)
-
-    (; pou, parent) = x
-
-    parts = map(pou) do D
-        getproperty(D, :part)
-    end
-
-    decomps = map(pou) do D
-        getproperty(D, :decomp)
-    end
-
-    indices = map(first(parts), last(parts)) do start, stop
-        first(start):last(stop)
-    end
-
-    ci = CartesianIndices(indices)[i]
-
-    index = findfirst(parts) do part
-        in(ci, CartesianIndices(part))
-    end
-
-    cj = findfirst(CartesianIndices(decomps[index])) do cj
-        ci == cj
-    end
-
-    j = LinearIndices(CartesianIndices(decomps[index]))[cj]
-
-    parent[index][j] = val
-end
-=#
-
-#=
-function CartesianDDMVector{T}(::UndefInitializer, decomp) where {T}
-    parent = map(decomp) do indices
-        Vector{T}(undef, prod(length.(indices)))
-    end
-    CartesianDDMVector{T,typeof(parent)}(parent)
-end
-=#
-#=
-function CartesianDDMVector(init::Function, decomp)
-    parent = map(decomp) do indices
-        init(prod(length.(indices)))
-    end
-    CartesianDDMVector{eltype(first(parent)),typeof(parent)}(parent)
-end
-
-=#
 

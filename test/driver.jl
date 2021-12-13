@@ -5,10 +5,9 @@ procs = (3, 4)
 overs = (1, 1)
 
 dims = CartesianDDMDimension.(dofs, procs, overs)
+context = CartesianDDMContext(dims)
 
-glb = globalranges(dims)
-cnt = continuousranges(dims)
-lcl = localranges(dims)
+u = CartesianDDMVector(zeros, context)
+u[12] = 1
 
-glb, cnt, lcl
-
+nothing
