@@ -9,12 +9,14 @@ export CartesianDDMDimension
 export CartesianDDMContext
 export CartesianDDMVector
 
+export decompose
+
 include("decomposition.jl")
 include("arrays.jl")
 include("vectors.jl")
+include("matrices.jl")
 
 #=
-include("matrices.jl")
 include("partition.jl")
 include("synchronize.jl")
 =#

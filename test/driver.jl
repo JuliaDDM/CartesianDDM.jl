@@ -7,7 +7,9 @@ overs = (1, 1)
 dims = CartesianDDMDimension.(dofs, procs, overs)
 context = CartesianDDMContext(dims)
 
-u = CartesianDDMVector(zeros, context)
-u[12] = 1
+du = CartesianDDMVector(zeros, context)
+du[12] = 1
 
-nothing
+v = rand(prod(dofs))
+dv = decompose(context, v)
+

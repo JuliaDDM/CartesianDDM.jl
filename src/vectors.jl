@@ -104,7 +104,7 @@ function CartesianDDMVector{T}(::UndefInitializer, context) where {T}
     _, lcl = ranges(context)
 
     parent = map(lcl) do el
-        Array{T}(undef, length.(el))
+        Array{T}(undef, prod(length.(el)))
     end
 
     CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
@@ -114,11 +114,25 @@ function CartesianDDMVector(init::Function, context)
     _, lcl = ranges(context)
 
     parent = map(lcl) do el
-        init(length.(el))
+        init(prod(length.(el)))
     end
 
     T = eltype(eltype(parent))
 
     CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
+end
+
+function decompose(context::CartesianDDMContext, x::AbstractArray)
+    (; dims) = context
+
+    y = reshape(x, getdof.(dims))
+
+    glb, _ = ranges(context)
+
+    parent = map(glb) do el
+        y[CartesianIndices(el)]
+    end
+
+    CartesianDDMVector{eltype(x),typeof(context),typeof(parent)}(context, parent)
 end
 
