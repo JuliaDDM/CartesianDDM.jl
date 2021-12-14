@@ -3,7 +3,7 @@ const DDMVector{T} = DDMArray{T,1}
 """
     CartesianDDMVector{T,C,A}
 
-Objects of `CartesianDDMVector` behave like a normal array, except
+Objects of `CartesianDDMVector` behave like a normal vector, except
 that the storage is not stored continuously but by DDM subdomain.
 
 For now, a Boolean partition of unity is assumed but this could be
@@ -100,6 +100,11 @@ function setindex!(x::CartesianDDMVector, val, i::Int)
     val
 end
 
+#=
+"""
+Do not use until `makecoherent` implemented.
+
+"""
 function CartesianDDMVector{T}(::UndefInitializer, context) where {T}
     _, lcl = ranges(context)
 
@@ -110,6 +115,10 @@ function CartesianDDMVector{T}(::UndefInitializer, context) where {T}
     CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
 end
 
+"""
+Do not use until `makecoherent` implemented.
+
+"""
 function CartesianDDMVector(init::Function, context)
     _, lcl = ranges(context)
 
@@ -121,8 +130,9 @@ function CartesianDDMVector(init::Function, context)
 
     CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
 end
+=#
 
-function decompose(context::CartesianDDMContext, x::AbstractArray)
+function decompose(context::CartesianDDMContext, x::AbstractVector)
     (; dims) = context
 
     y = reshape(x, getdof.(dims))
