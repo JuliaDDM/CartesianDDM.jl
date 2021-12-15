@@ -114,6 +114,7 @@ function CartesianDDMVector{T}(::UndefInitializer, context) where {T}
 
     CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
 end
+=#
 
 """
 Do not use until `makecoherent` implemented.
@@ -128,9 +129,10 @@ function CartesianDDMVector(init::Function, context)
 
     T = eltype(eltype(parent))
 
-    CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
+    x = CartesianDDMVector{T,typeof(context),typeof(parent)}(context, parent)
+
+    makecoherent!(x)
 end
-=#
 
 function decompose(context::CartesianDDMContext, x::AbstractVector)
     (; dims) = context
@@ -140,7 +142,7 @@ function decompose(context::CartesianDDMContext, x::AbstractVector)
     glb, _ = ranges(context)
 
     parent = map(glb) do el
-        y[CartesianIndices(el)]
+        reshape(y[CartesianIndices(el)], :)
     end
 
     CartesianDDMVector{eltype(x),typeof(context),typeof(parent)}(context, parent)

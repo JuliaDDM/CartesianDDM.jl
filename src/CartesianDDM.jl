@@ -15,10 +15,6 @@ include("decomposition.jl")
 include("arrays.jl")
 include("vectors.jl")
 include("matrices.jl")
-
-#=
-include("partition.jl")
-include("synchronize.jl")
-=#
+include("coherence.jl")
 
 end

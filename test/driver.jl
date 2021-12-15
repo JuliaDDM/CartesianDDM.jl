@@ -1,8 +1,8 @@
 using CartesianDDM
 
-dofs = (8,)
-procs = (2,)
-overs = (3,)
+dofs = (8, 12)
+procs = (2, 3)
+overs = (3, 2)
 
 dims = CartesianDDMDimension.(dofs, procs, overs)
 context = CartesianDDMContext(dims)
