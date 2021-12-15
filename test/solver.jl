@@ -16,14 +16,29 @@ dx = decompose(context, x)
 cg!(x, A, b)
 cg!(dx, A, db)
 
-@assert iszero(x - dx)
+@assert isapprox(x, dx)
 
 dA = decompose(context, A)
 
-@assert iszero(dA * db - A * b)
+@assert isapprox(dA * db, A * b)
 
 dc = CartesianDDMVector(rand, context)
 c = collect(dc)
 
-@assert iszero(dA * dc - A * c)
+@assert isapprox(dA * dc, A * c)
+
+dP = CartesianDDMRAS(dA)
+
+x .= 0
+dx = decompose(context, x)
+
+# bicgstabl! : does not work
+# gmres!
+# cg! : problem is that RAS is not symmetric
+cg!(dx, A, db, Pl = dP)
+cg!(x, A, b)
+
+@show norm(x - dx)
+
+# need to write own stationary method (block jacobi)
 

@@ -14,6 +14,9 @@ struct CartesianDDMMatrix{T,C,A} <: DDMMatrix{T}
     parent::A
 end
 
+parent(x::CartesianDDMMatrix) = getproperty(x, :parent)
+getcontext(x::CartesianDDMMatrix) = getproperty(x, :context)
+
 function size(x::CartesianDDMMatrix)
     (; context, parent) = x
     (; dims) = context
@@ -80,8 +83,6 @@ function decompose(context::CartesianDDMContext, a::AbstractMatrix)
 
     CartesianDDMMatrix{eltype(a),typeof(context),typeof(parent)}(context, parent)
 end
-
-import Base.*
 
 function (*)(A::CartesianDDMMatrix, x::CartesianDDMVector)
     context = A.context

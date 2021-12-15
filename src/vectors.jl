@@ -20,6 +20,9 @@ struct CartesianDDMVector{T,C,A} <: DDMVector{T}
     parent::A
 end
 
+parent(x::CartesianDDMVector) = getproperty(x, :parent)
+getcontext(x::CartesianDDMVector) = getproperty(x, :context)
+
 function size(x::CartesianDDMVector)
     (; context, parent) = x
     (; dims) = context
@@ -146,5 +149,15 @@ function decompose(context::CartesianDDMContext, x::AbstractVector)
     end
 
     CartesianDDMVector{eltype(x),typeof(context),typeof(parent)}(context, parent)
+end
+
+function similar(x::CartesianDDMVector)
+    (; context, parent) = x
+
+    out = map(parent) do el
+        similar(el)
+    end
+
+    CartesianDDMVector{eltype(x),typeof(context),typeof(parent)}(context, out)
 end
 

@@ -1,13 +1,19 @@
 module CartesianDDM
 
 using Base.Iterators
+using LinearAlgebra
 using OffsetArrays
 
-import Base: OneTo, parent, size, getindex, setindex!
+import Base: OneTo
+import Base: parent, size, getindex, setindex!, similar
+import Base: *, \
+
+import LinearAlgebra: ldiv!
 
 export CartesianDDMDimension
 export CartesianDDMContext
 export CartesianDDMVector
+export CartesianDDMRAS
 
 export decompose
 
@@ -16,5 +22,7 @@ include("arrays.jl")
 include("vectors.jl")
 include("matrices.jl")
 include("coherence.jl")
+include("preconditioner.jl")
+include("ras.jl")
 
 end
