@@ -1,4 +1,5 @@
 using CartesianDDM
+using Printf
 using LinearAlgebra
 using SparseArrays
 using IterativeSolvers
@@ -11,7 +12,7 @@ overs = (4, 2)
 dims = CartesianDDMDimension.(dofs, procs, overs)
 context = CartesianDDMContext(dims)
 
-A = laplacian(dofs...)
+A = laplacian(dofs)
 dA = decompose(context, A)
 
 P = Diagonal(A)
@@ -26,6 +27,16 @@ du = decompose(context, u)
 res = similar(rhs)
 dres = similar(drhs)
 
+io = stdout
+
+str = "%12s%2s" * "%12s" ^ 2 * "\n"
+fmt = Printf.Format(str)
+
+Printf.format(io, fmt, "Step", "  ", "Diagonal", "Block diag.")
+
+str = "%12d%2s" * "%12.5E" ^ 2 * "\n"
+fmt = Printf.Format(str)
+
 itmax = 50
 
 for it in 1:itmax
@@ -35,6 +46,6 @@ for it in 1:itmax
     u .+= P \ res
     du .+= dP \ dres
 
-    println("it=$it : $(norm(res)) vs. $(norm(dres))")
+    Printf.format(io, fmt, it, "  ", norm(res), norm(dres))
 end
 
